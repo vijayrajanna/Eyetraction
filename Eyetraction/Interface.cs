@@ -16,6 +16,12 @@ using InTheHand.Net;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System;
+using System.Collections.Generic;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading;
 
 namespace Eyetraction
 {
@@ -33,7 +39,8 @@ namespace Eyetraction
         private void Form1_Load(object sender, EventArgs e)
         {
             FormBorderStyle = FormBorderStyle.None;
-            WindowState = FormWindowState.Maximized;
+            //WindowState = FormWindowState.Maximized;
+            WindowState = FormWindowState.Minimized;
             TopMost = true;
 
 
@@ -60,7 +67,7 @@ namespace Eyetraction
             }
 
             //Initialize bluetooth connection
-            StartListening();
+            startListening();
 
         }
 
@@ -119,82 +126,104 @@ namespace Eyetraction
             return new string(chars);
         }
 
-        public static void StartListening()
+        /* public static void StartListening()
+         {
+             byte[] bytes = new Byte[1024];
+             string data;
+
+             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
+             IPAddress ipAddress = ipHostInfo.AddressList[0];
+             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);
+
+             Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+             try
+             {
+                 listener.Bind(localEndPoint);
+                 listener.Listen(10);
+
+                 while (true)
+                 {
+                     Socket handler = listener.Accept();
+                     data = null;
+
+                     while (true)
+                     {
+                         bytes = new byte[1024];
+                         int bytesRec = handler.Receive(bytes);
+                         data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
+                         Console.WriteLine(data);
+
+                         if (data[0] == 'q')
+                         {
+                             break;
+                         }
+                         else if (data[0] == 'c')
+                         {
+                             string addr_string = data.Substring(1, 12);
+                             data = "";
+
+                             BluetoothAddress addr = BluetoothAddress.Parse(addr_string);
+                             BluetoothClient client = new BluetoothClient();
+                             BluetoothEndPoint other_device = new BluetoothEndPoint(addr, BluetoothService.SerialPort);
+
+                             client.Connect(other_device);
+
+                             blue_comm = client.GetStream();
+                         }
+                         else
+                         {
+                             handler.Send(Encoding.ASCII.GetBytes("1"));
+                             Send(data);
+                         }
+                         data = "";
+
+                     }
+                     break;
+                 }
+             }
+             catch (Exception e)
+             {
+                 Console.WriteLine(e.Message);
+             }
+         }
+
+         private static void Send(String msg)
+         {
+             try
+             {
+                 msg = msg.Trim();
+                 Console.WriteLine("Sending: " + msg);
+                 int length = msg.Length;
+                 byte[] msg_bytes = toSingleBytes(toBytes(msg));
+                 blue_comm.Write(msg_bytes, 0, length);
+                 Thread.Sleep(1000);
+
+             }
+             catch (Exception e)
+             {
+                 Console.WriteLine(e.Message);
+             }
+         }*/
+
+        public void startListening()
         {
-            byte[] bytes = new Byte[1024];
-            string data;
-            IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);
-
-            Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            try
+            SerialPort serialPort = new SerialPort();
+            serialPort.BaudRate = 115200;
+            serialPort.PortName = "COM6"; // Set in Windows
+            serialPort.Open();
+            int counter = 0;
+            while (serialPort.IsOpen)
             {
-                listener.Bind(localEndPoint);
-                listener.Listen(10);
-
-                while (true)
+                // WRITE THE INCOMING BUFFER TO CONSOLE
+                while (serialPort.BytesToRead > 0)
                 {
-                    Socket handler = listener.Accept();
-                    data = null;
-
-                    while (true)
-                    {
-                        bytes = new byte[1024];
-                        int bytesRec = handler.Receive(bytes);
-                        data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                        Console.WriteLine(data);
-
-                        if (data[0] == 'q')
-                        {
-                            break;
-                        }
-                        else if (data[0] == 'c')
-                        {
-                            string addr_string = data.Substring(1, 12);
-                            data = "";
-
-                            BluetoothAddress addr = BluetoothAddress.Parse(addr_string);
-                            BluetoothClient client = new BluetoothClient();
-                            BluetoothEndPoint other_device = new BluetoothEndPoint(addr, BluetoothService.SerialPort);
-
-                            client.Connect(other_device);
-
-                            blue_comm = client.GetStream();
-                        }
-                        else
-                        {
-                            handler.Send(Encoding.ASCII.GetBytes("1"));
-                            Send(data);
-                        }
-                        data = "";
-
-                    }
-                    break;
+                    Console.Write(Convert.ToChar(serialPort.ReadChar()));
+                    Console.Write("Hello");
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
-
-        private static void Send(String msg)
-        {
-            try
-            {
-                msg = msg.Trim();
-                Console.WriteLine("Sending: " + msg);
-                int length = msg.Length;
-                byte[] msg_bytes = toSingleBytes(toBytes(msg));
-                blue_comm.Write(msg_bytes, 0, length);
-                Thread.Sleep(1000);
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
+                // SEND
+                serialPort.WriteLine("PC counter: " + (counter++));
+                Thread.Sleep(500);
             }
         }
     }

@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 
 #define bluetooth Serial1
-#define BAUDRATE 115200
+#define BAUDRATE 9600 //115200
 
 // Analog read 0 is pin 38 
 
@@ -16,6 +16,17 @@ void setup() {
   pinMode(LED, OUTPUT);
   Serial.begin(BAUDRATE);
   bluetooth.begin(BAUDRATE);
+
+  /*pinMode(LED, OUTPUT);
+  Serial.begin(9600);  // Begin the serial monitor at 9600bps
+  bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
+  bluetooth.print("$");  // Print three times individually
+  bluetooth.print("$");
+  bluetooth.print("$");  // Enter command mode
+  delay(100);  // Short delay, wait for the Mate to send back CMD
+  bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
+  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+  bluetooth.begin(9600);  // Start bluetooth serial at 9600*/
 }
 
 void loop() {
@@ -30,16 +41,18 @@ void loop() {
 
       bluetooth.write(buffer);
       bluetooth.flush();
-      //delay(400);
+      delay(400);
       digitalWrite(LED, LOW);
   }
   else
   {
-      delay(100);
+          bluetooth.write(buffer);
+      bluetooth.flush();  
+    delay(100);
   }
 
   ///////////////////////////////////////////////////////////
-  if(bluetooth.available())  // If the bluetooth sent any characters
+  /*if(bluetooth.available())  // If the bluetooth sent any characters
   {
     // Send any characters the bluetooth prints to the serial monitor
     int i = 0;
@@ -51,7 +64,7 @@ void loop() {
         delay(200);
         if(i > 1) break;
     }
-  }
+  }*/
   
   ////////////////////////////////////////////////////////////////
   if(Serial.available())  // If stuff was typed in the serial monitor
