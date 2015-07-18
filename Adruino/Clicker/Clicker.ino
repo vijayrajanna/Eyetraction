@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 
 #define bluetooth Serial1
-#define BAUDRATE 9600 //115200
+#define BAUDRATE 9600
 
 // Analog read 0 is pin 38 
 
@@ -9,6 +9,8 @@ int volts = 0;
 int FSR_PIN = 0;
 int LED = 17;
 char Msg[2] ;
+char toPrint ;
+bool sent = false;
 char buffer[2] = {'O', 'K'};
 
 void setup() {
@@ -41,30 +43,35 @@ void loop() {
 
       bluetooth.write(buffer);
       bluetooth.flush();
+      sent = true;
       delay(400);
       digitalWrite(LED, LOW);
   }
   else
   {
-          bluetooth.write(buffer);
-      bluetooth.flush();  
-    delay(100);
+      //bluetooth.write(buffer);
+      //bluetooth.flush();  
+      delay(100);
   }
 
   ///////////////////////////////////////////////////////////
-  /*if(bluetooth.available())  // If the bluetooth sent any characters
+  if(bluetooth.available())  // If the bluetooth sent any characters
   {
     // Send any characters the bluetooth prints to the serial monitor
     int i = 0;
-    while(bluetooth.available())
+    while(bluetooth.available() && (sent == true))
     {
-	Msg[i] = (char)bluetooth.read();
-        Serial.print((char)Msg[i]);
+	toPrint = (char)bluetooth.read();
+        Serial.print((char)toPrint);
         i++;
         delay(200);
-        if(i > 1) break;
+        if(i > 1) 
+        {
+          sent = false;
+          break;
+        }
     }
-  }*/
+  }
   
   ////////////////////////////////////////////////////////////////
   if(Serial.available())  // If stuff was typed in the serial monitor
